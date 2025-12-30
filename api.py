@@ -3,8 +3,12 @@ from utils import get_with_retry
 from logger import logger
 
 
+# =========================
+# PEGAWAI & PERIODE
+# =========================
 def get_pegawai_dan_periode(x_auth):
-    logger.info("📥 Ambil pegawai & periode")
+    logger.info("📥 Ambil pegawai & periode aktif")
+
     return get_with_retry(
         f"{BASE_URL}/dashboard/skpbulanini",
         headers={
@@ -15,6 +19,9 @@ def get_pegawai_dan_periode(x_auth):
     )
 
 
+# =========================
+# DAFTAR SKP
+# =========================
 def get_skp_list(x_auth, pegawai_id, periode_id):
     logger.info("📥 Ambil daftar SKP")
 
@@ -28,40 +35,50 @@ def get_skp_list(x_auth, pegawai_id, periode_id):
     )
 
 
-def get_rencana_kinerja(x_auth, skpid):
-    logger.info(f"📥 Ambil RK (skpid={skpid})")
+# =========================
+# RENCANA KINERJA (BULANAN / FINAL)
+# =========================
+def get_rencana_kinerja_bulanan(x_auth, skpid):
+    """
+    RK yang BENAR untuk pelaksanaan:
+    - RK awal tahun
+    - RK tambahan
+    - Status iscopied & isused
+    """
+    logger.info(f"📥 Ambil RK bulanan (copy) | skpid={skpid}")
 
-    return get_with_retry(
-        f"{BASE_URL}/skp/rk",
-        headers={"X-Auth": x_auth},
-        params={"skpid": skpid, "direct": 1}
+    data = get_with_retry(
+        f"{BASE_URL}/skp/rk/copy/bulanan",
+        headers={
+            "X-Auth": x_auth,
+            "User-Agent": USER_AGENT
+        },
+        params={"skpid": skpid}
     )
 
+    rk_list = data.get("rk", [])
+    logger.info(f"⬅️ RK diterima: {len(rk_list)} item")
 
-def get_presensi(x_auth, periode_id, periode_penilaian_id, niplama):
-    logger.info(
-        f"📥 Ambil presensi (periode_penilaian_id={periode_penilaian_id})"
-    )
+    return rk_list
 
-    return get_with_retry(
-        f"{BASE_URL}/kegiatan/presensi",
-        headers={"X-Auth": x_auth},
-        params={
-            "periodeid": periode_id,
-            "periodepenilaianid": periode_penilaian_id,
-            "niplama": niplama
-        }
-    )
 
+# =========================
+# PELAKSANAAN / PRESENSI
+# =========================
 def get_pelaksanaan_bulanan(x_auth, periode_id, periode_penilaian_id, niplama):
     logger.info(
-        f"➡️ API presensi | periode_id={periode_id}, "
-        f"periode_penilaian_id={periode_penilaian_id}, niplama={niplama}"
+        f"➡️ API presensi | "
+        f"periode_id={periode_id}, "
+        f"periode_penilaian_id={periode_penilaian_id}, "
+        f"niplama={niplama}"
     )
 
     data = get_with_retry(
         f"{BASE_URL}/kegiatan/presensi",
-        headers={"X-Auth": x_auth},
+        headers={
+            "X-Auth": x_auth,
+            "User-Agent": USER_AGENT
+        },
         params={
             "periodeid": periode_id,
             "periodepenilaianid": periode_penilaian_id,
