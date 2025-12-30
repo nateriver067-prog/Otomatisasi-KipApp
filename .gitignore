@@ -5,6 +5,10 @@ __pycache__/
 # Log
 *.log
 
+# Input files
+input/
+*.xlsx
+
 # Output files
 output/
 *.xlsx
