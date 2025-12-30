@@ -1,0 +1,98 @@
+2025-12-30 10:13:53,374 - INFO - 🚀 Program dimulai
+2025-12-30 10:13:53,374 - INFO - ====== WebDriver manager ======
+2025-12-30 10:13:54,102 - INFO - Get LATEST chromedriver version for google-chrome
+2025-12-30 10:13:54,362 - INFO - Get LATEST chromedriver version for google-chrome
+2025-12-30 10:13:54,574 - INFO - Driver [C:\Users\nater\.wdm\drivers\chromedriver\win64\143.0.7499.169\chromedriver-win32/chromedriver.exe] found in cache
+2025-12-30 10:14:15,517 - INFO - 📥 Ambil pegawai & periode
+2025-12-30 10:14:15,518 - INFO - 🌐 Request https://kipapp.bps.go.id/api/v1/dashboard/skpbulanini (attempt 1)
+2025-12-30 10:14:15,991 - INFO - 📥 Ambil daftar SKP
+2025-12-30 10:14:15,991 - INFO - 🌐 Request https://kipapp.bps.go.id/api/v1/skp (attempt 1)
+2025-12-30 10:14:16,694 - INFO - 📌 SKP Tahunan ID: 696164
+2025-12-30 10:14:16,694 - INFO - 📥 Ambil RK (skpid=696164)
+2025-12-30 10:14:16,694 - INFO - 🌐 Request https://kipapp.bps.go.id/api/v1/skp/rk (attempt 1)
+2025-12-30 10:14:41,135 - INFO - 🚀 Program dimulai
+2025-12-30 10:14:41,135 - INFO - ====== WebDriver manager ======
+2025-12-30 10:14:41,866 - INFO - Get LATEST chromedriver version for google-chrome
+2025-12-30 10:14:42,089 - INFO - Get LATEST chromedriver version for google-chrome
+2025-12-30 10:14:42,292 - INFO - Driver [C:\Users\nater\.wdm\drivers\chromedriver\win64\143.0.7499.169\chromedriver-win32/chromedriver.exe] found in cache
+2025-12-30 10:15:16,665 - INFO - 📥 Ambil pegawai & periode
+2025-12-30 10:15:16,666 - INFO - 🌐 Request https://kipapp.bps.go.id/api/v1/dashboard/skpbulanini (attempt 1)
+2025-12-30 10:15:17,140 - INFO - 📥 Ambil daftar SKP
+2025-12-30 10:15:17,140 - INFO - 🌐 Request https://kipapp.bps.go.id/api/v1/skp (attempt 1)
+2025-12-30 10:15:17,664 - INFO - 📌 SKP Tahunan ID: 696164
+2025-12-30 10:15:17,664 - INFO - 📥 Ambil RK (skpid=696164)
+2025-12-30 10:15:17,664 - INFO - 🌐 Request https://kipapp.bps.go.id/api/v1/skp/rk (attempt 1)
+2025-12-30 10:15:18,417 - INFO - ✅ Export RK selesai
+2025-12-30 10:24:49,680 - INFO - 🚀 Program dimulai
+2025-12-30 10:24:49,680 - INFO - ====== WebDriver manager ======
+2025-12-30 10:24:50,412 - INFO - Get LATEST chromedriver version for google-chrome
+2025-12-30 10:24:50,618 - INFO - Get LATEST chromedriver version for google-chrome
+2025-12-30 10:24:50,909 - INFO - Driver [C:\Users\nater\.wdm\drivers\chromedriver\win64\143.0.7499.169\chromedriver-win32/chromedriver.exe] found in cache
+2025-12-30 10:25:16,628 - INFO - 📥 Ambil pegawai & periode
+2025-12-30 10:25:16,629 - INFO - 🌐 Request https://kipapp.bps.go.id/api/v1/dashboard/skpbulanini (attempt 1)
+2025-12-30 10:25:17,210 - INFO - 📥 Ambil daftar SKP
+2025-12-30 10:25:17,210 - INFO - 🌐 Request https://kipapp.bps.go.id/api/v1/skp (attempt 1)
+2025-12-30 10:25:17,977 - INFO - 📌 SKP Tahunan ID: 696164
+2025-12-30 10:25:17,977 - INFO - 📥 Ambil RK (skpid=696164)
+2025-12-30 10:25:17,977 - INFO - 🌐 Request https://kipapp.bps.go.id/api/v1/skp/rk (attempt 1)
+2025-12-30 10:25:19,217 - INFO - ✅ Export RK selesai
+2025-12-30 10:34:24,558 - INFO - 🚀 Program dimulai
+2025-12-30 10:34:24,558 - INFO - ====== WebDriver manager ======
+2025-12-30 10:34:25,258 - INFO - Get LATEST chromedriver version for google-chrome
+2025-12-30 10:34:25,530 - INFO - Get LATEST chromedriver version for google-chrome
+2025-12-30 10:34:25,748 - INFO - Driver [C:\Users\nater\.wdm\drivers\chromedriver\win64\143.0.7499.169\chromedriver-win32/chromedriver.exe] found in cache
+2025-12-30 10:34:48,379 - INFO - 📥 Ambil pegawai & periode
+2025-12-30 10:34:48,890 - INFO - 📥 Ambil daftar SKP
+2025-12-30 10:34:49,545 - INFO - 📌 SKP Tahunan ID: 696164
+2025-12-30 10:34:49,545 - INFO - 📥 Ambil RK (skpid=696164)
+2025-12-30 10:34:50,910 - INFO - ✅ Export RK selesai
+2025-12-30 10:34:50,910 - INFO - 📆 Ambil pelaksanaan bulan: Januari
+2025-12-30 10:34:50,910 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=5, niplama=340060186
+2025-12-30 10:34:51,686 - INFO - ⬅️ Data pelaksanaan diterima: 26 record
+2025-12-30 10:36:47,417 - INFO - 🚀 Program dimulai
+2025-12-30 10:36:47,417 - INFO - ====== WebDriver manager ======
+2025-12-30 10:36:48,150 - INFO - Get LATEST chromedriver version for google-chrome
+2025-12-30 10:36:48,371 - INFO - Get LATEST chromedriver version for google-chrome
+2025-12-30 10:36:48,571 - INFO - Driver [C:\Users\nater\.wdm\drivers\chromedriver\win64\143.0.7499.169\chromedriver-win32/chromedriver.exe] found in cache
+2025-12-30 10:37:08,841 - INFO - 📥 Ambil pegawai & periode
+2025-12-30 10:37:09,303 - INFO - 📥 Ambil daftar SKP
+2025-12-30 10:37:09,815 - INFO - 📌 SKP Tahunan ID: 696164
+2025-12-30 10:37:09,815 - INFO - 📥 Ambil RK (skpid=696164)
+2025-12-30 10:37:10,843 - INFO - ✅ Export RK selesai
+2025-12-30 10:37:10,843 - INFO - 📆 Ambil pelaksanaan bulan: Januari
+2025-12-30 10:37:10,843 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=5, niplama=340060186
+2025-12-30 10:37:11,663 - INFO - ⬅️ Data pelaksanaan diterima: 26 record
+2025-12-30 10:37:11,663 - INFO - 📆 Ambil pelaksanaan bulan: Februari
+2025-12-30 10:37:11,664 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=6, niplama=340060186
+2025-12-30 10:37:12,377 - INFO - ⬅️ Data pelaksanaan diterima: 43 record
+2025-12-30 10:37:12,377 - INFO - 📆 Ambil pelaksanaan bulan: Maret
+2025-12-30 10:37:12,378 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=7, niplama=340060186
+2025-12-30 10:37:13,051 - INFO - ⬅️ Data pelaksanaan diterima: 31 record
+2025-12-30 10:37:13,051 - INFO - 📆 Ambil pelaksanaan bulan: April
+2025-12-30 10:37:13,052 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=8, niplama=340060186
+2025-12-30 10:37:13,927 - INFO - ⬅️ Data pelaksanaan diterima: 29 record
+2025-12-30 10:37:13,927 - INFO - 📆 Ambil pelaksanaan bulan: Mei
+2025-12-30 10:37:13,927 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=9, niplama=340060186
+2025-12-30 10:37:14,735 - INFO - ⬅️ Data pelaksanaan diterima: 34 record
+2025-12-30 10:37:14,735 - INFO - 📆 Ambil pelaksanaan bulan: Juni
+2025-12-30 10:37:14,735 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=10, niplama=340060186
+2025-12-30 10:37:15,506 - INFO - ⬅️ Data pelaksanaan diterima: 50 record
+2025-12-30 10:37:15,507 - INFO - 📆 Ambil pelaksanaan bulan: Juli
+2025-12-30 10:37:15,507 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=11, niplama=340060186
+2025-12-30 10:37:16,310 - INFO - ⬅️ Data pelaksanaan diterima: 55 record
+2025-12-30 10:37:16,310 - INFO - 📆 Ambil pelaksanaan bulan: Agustus
+2025-12-30 10:37:16,311 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=12, niplama=340060186
+2025-12-30 10:37:17,091 - INFO - ⬅️ Data pelaksanaan diterima: 44 record
+2025-12-30 10:37:17,091 - INFO - 📆 Ambil pelaksanaan bulan: September
+2025-12-30 10:37:17,092 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=13, niplama=340060186
+2025-12-30 10:37:17,826 - INFO - ⬅️ Data pelaksanaan diterima: 43 record
+2025-12-30 10:37:17,827 - INFO - 📆 Ambil pelaksanaan bulan: Oktober
+2025-12-30 10:37:17,827 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=14, niplama=340060186
+2025-12-30 10:37:18,591 - INFO - ⬅️ Data pelaksanaan diterima: 53 record
+2025-12-30 10:37:18,591 - INFO - 📆 Ambil pelaksanaan bulan: November
+2025-12-30 10:37:18,591 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=15, niplama=340060186
+2025-12-30 10:37:19,279 - INFO - ⬅️ Data pelaksanaan diterima: 56 record
+2025-12-30 10:37:19,279 - INFO - 📆 Ambil pelaksanaan bulan: Desember
+2025-12-30 10:37:19,279 - INFO - ➡️ API presensi | periode_id=7, periode_penilaian_id=16, niplama=340060186
+2025-12-30 10:37:19,954 - INFO - ⬅️ Data pelaksanaan diterima: 47 record
+2025-12-30 10:37:19,966 - INFO - ✅ Pelaksanaan_Bulanan.xlsx berhasil dibuat
