@@ -1,4 +1,6 @@
-import time, json
+# auth/auth_kipapp.py
+import time
+import json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -7,7 +9,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
-def login_and_get_xauth(username, password):
+from config import USERNAME, PASSWORD   # 🔑 AMBIL DARI CONFIG
+
+
+def login_and_get_xauth():
     options = Options()
     options.add_argument("--start-maximized")
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
@@ -25,8 +30,8 @@ def login_and_get_xauth(username, password):
         )
     ).click()
 
-    wait.until(EC.presence_of_element_located((By.ID, "username"))).send_keys(username)
-    wait.until(EC.presence_of_element_located((By.ID, "password"))).send_keys(password)
+    wait.until(EC.presence_of_element_located((By.ID, "username"))).send_keys(USERNAME)
+    wait.until(EC.presence_of_element_located((By.ID, "password"))).send_keys(PASSWORD)
     driver.find_element(By.ID, "kc-login").click()
 
     wait.until(EC.url_contains("kipapp.bps.go.id"))
@@ -45,7 +50,8 @@ def login_and_get_xauth(username, password):
                 break
 
     driver.quit()
+
     if not token:
-        raise Exception("X-Auth tidak ditemukan")
+        raise RuntimeError("❌ X-Auth tidak ditemukan")
 
     return token

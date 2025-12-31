@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def parse_rencana_kinerja_bulanan(rk_list):
+def parse_rencana_kinerja_tahunan(rk_list):
     """
     Output DataFrame:
     rkid | rencana_kinerja | iki_ids | iscopied | isused

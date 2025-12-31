@@ -6,25 +6,25 @@ import requests
 from auth.kipapp import login_and_get_xauth
 from api.skp import (
     get_dashboard_skp_bulan_ini,
-    get_rencana_kinerja_bulanan,
     get_pelaksanaan_bulanan,
+    get_rk_dropdown_bulanan,   # ✅ endpoint BENAR
 )
 from logger import logger
-from utils import UnauthorizedError
 from config import (
     EXCEL_PELAKSANAAN,
     SHEET_PELAKSANAAN,
     EXCEL_LINKS,
     DELAY_POST,
-    validate_env
+    validate_env,
+    NIP_LAMA,
 )
 
 BASE_URL = "https://kipapp.bps.go.id/api/v1"
 
 
-# ======================
+# ==================================================
 # POST 1 PELAKSANAAN
-# ======================
+# ==================================================
 def post_pelaksanaan(
     x_auth,
     skpid_bulan,
@@ -58,27 +58,21 @@ def post_pelaksanaan(
         raise RuntimeError(r.text)
 
 
-# ======================
+# ==================================================
 # MAIN
-# ======================
+# ==================================================
 def main(dry_run=False):
     validate_env()
-    logger.info("🚀 POST PELAKSANAAN FULL RUN")
+    logger.info("🚀 POST PELAKSANAAN BULANAN")
 
     if dry_run:
         logger.warning("🧪 DRY RUN AKTIF — TIDAK ADA POST")
 
     # ======================
-    # LOGIN
+    # LOGIN & DASHBOARD
     # ======================
     x_auth = login_and_get_xauth()
-
-    try:
-        dashboard = get_dashboard_skp_bulan_ini(x_auth)
-    except UnauthorizedError:
-        logger.warning("🔄 Token expired, login ulang...")
-        x_auth = login_and_get_xauth()
-        dashboard = get_dashboard_skp_bulan_ini(x_auth)
+    dashboard = get_dashboard_skp_bulan_ini(x_auth)
 
     skp_raw = dashboard["skp"]["raw"]
     skpid_bulan = skp_raw["id"]
@@ -88,16 +82,21 @@ def main(dry_run=False):
     logger.info(f"📌 SKP BULAN ID : {skpid_bulan}")
 
     # ======================
-    # RK BULANAN (SOURCE OF TRUTH)
+    # RK BULANAN (DROPDOWN)
     # ======================
-    rk_list = get_rencana_kinerja_bulanan(x_auth, skpid_bulan)
+    rk_list = get_rk_dropdown_bulanan(x_auth, skpid_bulan)
 
     rk_map = {
-        rk["rencanakinerja"].strip().lower(): str(rk["id"])
+        rk["rencanakinerja"].strip().lower(): str(rk["rkid"])
         for rk in rk_list
+        if rk.get("rkid") and rk.get("rencanakinerja")
     }
 
-    logger.info(f"📋 RK bulanan aktif: {len(rk_map)}")
+    logger.info(f"📋 RK bulanan aktif (dropdown): {len(rk_map)}")
+
+    if not rk_map:
+        logger.error("❌ RK bulanan kosong — pelaksanaan tidak bisa dipost")
+        return
 
     # ======================
     # PELAKSANAAN EXISTING
@@ -106,7 +105,7 @@ def main(dry_run=False):
         x_auth,
         periode_id,
         periode_penilaian_id,
-        dashboard["pegawai"]["raw"]["niplama"],
+        NIP_LAMA,
     )
 
     existing_keys = {
@@ -140,20 +139,13 @@ def main(dry_run=False):
         tanggal = str(row["tanggal"]).strip()
         kegiatan = str(row["deskripsi"]).strip()
         teks_rk = str(row["rencana_kinerja"]).strip().lower()
-        rkid = str(row["rkid"]).strip()
 
-        # ===== VALIDASI =====
         if not tanggal or not kegiatan or not teks_rk:
             gagal += 1
             continue
 
-        if not rkid.isdigit():
-            logger.error(f"❌ RKID tidak valid: {rkid} ({tanggal})")
-            gagal += 1
-            continue
-
         if teks_rk not in rk_map:
-            logger.error(f"❌ RK tidak ditemukan: {teks_rk}")
+            logger.error(f"❌ RK tidak ditemukan di RK bulanan: {teks_rk}")
             gagal += 1
             continue
 
@@ -162,18 +154,18 @@ def main(dry_run=False):
             gagal += 1
             continue
 
+        rkid = rk_map[teks_rk]
         key = (rkid, tanggal)
+
         if key in existing_keys:
             skip += 1
             continue
 
-        # ===== DRY RUN =====
         if dry_run:
             logger.info(f"[DRY RUN] {tanggal} | {kegiatan}")
             sukses += 1
             continue
 
-        # ===== POST =====
         try:
             post_pelaksanaan(
                 x_auth,
@@ -197,7 +189,3 @@ def main(dry_run=False):
     logger.info(f"✅ Berhasil : {sukses}")
     logger.info(f"⏭️ Skip     : {skip}")
     logger.info(f"❌ Gagal    : {gagal}")
-
-
-if __name__ == "__main__":
-    main()

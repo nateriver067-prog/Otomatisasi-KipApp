@@ -28,7 +28,7 @@ def get_dashboard_skp_bulan_ini(x_auth):
 # =========================
 # RENCANA KINERJA BULANAN (+ IKI)
 # =========================
-def get_rencana_kinerja_bulanan(x_auth, skpid_bulan):
+def get_rencana_kinerja_tahunan(x_auth, skpid_bulan):
     """
     RK BULANAN FINAL
     Dipakai untuk:
@@ -37,7 +37,7 @@ def get_rencana_kinerja_bulanan(x_auth, skpid_bulan):
     - POST /skp/bulanan
     - POST pelaksanaan
     """
-    logger.info(f"📥 Ambil RK bulanan + IKI | skpid={skpid_bulan}")
+    logger.info(f"📥 Ambil RK Tahunan + IKI | skpid={skpid_bulan}")
 
     data = get_with_retry(
         f"{BASE_URL}/skp/rk/copy/bulanan",
@@ -53,7 +53,10 @@ def get_rencana_kinerja_bulanan(x_auth, skpid_bulan):
 
     return rk_list
 
-
+# ==================================================
+# BACKWARD COMPATIBILITY (PENTING)
+# ==================================================
+get_rencana_kinerja_bulanan = get_rencana_kinerja_tahunan
 # =========================
 # PELAKSANAAN (PRESENSI)
 # =========================
@@ -87,7 +90,23 @@ def get_pelaksanaan_bulanan(x_auth, periode_id, periode_penilaian_id, niplama=No
     logger.info(f"⬅️ Data pelaksanaan diterima: {len(data)} record")
     return data
 
+def get_rk_dropdown_bulanan(x_auth, skpid_bulan):
+    logger.info(f"📥 Ambil RK dropdown bulanan | skpid={skpid_bulan}")
 
+    data = get_with_retry(
+        f"{BASE_URL}/skp/rk",
+        headers={
+            "X-Auth": x_auth,
+            "User-Agent": USER_AGENT
+        },
+        params={
+            "skpid": skpid_bulan,
+            "direct": 1
+        }
+    )
+
+    logger.info(f"⬅️ RK dropdown diterima: {len(data)} item")
+    return data
 # =========================
 # POST KEGIATAN (PELENGKAP)
 # =========================

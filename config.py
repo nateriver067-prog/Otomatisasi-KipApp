@@ -17,6 +17,7 @@ NIP_LAMA = os.getenv("NIP_LAMA")
 # ======================
 def validate_env():
     missing = []
+
     if not USERNAME:
         missing.append("KIPAPP_USERNAME")
     if not PASSWORD:
@@ -26,10 +27,10 @@ def validate_env():
 
     if missing:
         raise RuntimeError(
-            "ENV belum lengkap: "
+            "ENV belum lengkap, variabel berikut belum di-set: "
             + ", ".join(missing)
-            + "\nPastikan file .env ada dan terisi."
         )
+
 
 # ======================
 # API CONSTANT

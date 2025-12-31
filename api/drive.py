@@ -71,31 +71,15 @@ def login_drive_session():
 # ==================================================
 # AUTO DETECT USER_ID (DAV)
 # ==================================================
-def get_drive_user_id(cookies, requesttoken):
-    logger.info("🔎 Deteksi USER_ID Drive")
+def get_drive_user_id(cookies, requesttoken=None):
+    """
+    Ambil USER_ID Drive dari cookie nc_username
+    (paling stabil di Drive BPS)
+    """
+    user_id = cookies.get("nc_username")
 
-    r = requests.request(
-        "PROPFIND",
-        "https://drive.bps.go.id/remote.php/dav",
-        headers={
-            "Depth": "0",
-            "requesttoken": requesttoken
-        },
-        cookies=cookies
-    )
-
-    if r.status_code != 207:
-        raise UnauthorizedError(f"❌ PROPFIND gagal ({r.status_code})")
-
-    root = ET.fromstring(r.text)
-    ns = {"d": "DAV:"}
-
-    elem = root.find(".//d:current-user-principal/d:href", ns)
-    if elem is None:
-        raise Exception("❌ USER_ID Drive tidak ditemukan")
-
-    user_id = elem.text.strip().split("/")[-1]
-    logger.info(f"👤 USER_ID Drive: {user_id}")
+    if not user_id:
+        raise Exception("❌ USER_ID Drive tidak ditemukan di cookie nc_username")
 
     return user_id
 

@@ -1,19 +1,24 @@
+# executor/post_rk.py
 import json
 import pandas as pd
+import requests
 
 from auth.kipapp import login_and_get_xauth
 from api.skp import get_dashboard_skp_bulan_ini
 from logger import logger
-from utils import get_with_retry
-from config import set_enable_post_rk_false, ENABLE_POST_RK,validate_env
+from config import (
+    EXCEL_PELAKSANAAN,
+    ENABLE_POST_RK,
+    set_enable_post_rk_false,
+    validate_env,
+)
 
-EXCEL_FILE = "output/KipApp_Pelaksanaan_dan_RK.xlsx"
-SHEET_NAME = "Rencana_Kinerja_Bulanan"
+BASE_URL = "https://kipapp.bps.go.id/api/v1"
 
 
-def main(dry_run=False):
+def main(dry_run: bool = False):
     validate_env()
-    logger.info("🚀 POST RK BULANAN")
+    logger.info("🚀 POST RK BULANAN (WITH IKI)")
 
     # ======================
     # SAFETY FLAG
@@ -32,65 +37,131 @@ def main(dry_run=False):
     dashboard = get_dashboard_skp_bulan_ini(x_auth)
 
     skp_raw = dashboard["skp"]["raw"]
-
-    payload = {
-        "id": str(skp_raw["id"]),
-        "periodepenilaianid": skp_raw["periodepenilaianid"],
-        "data": [],
-        "flagmethod": 2
-    }
+    skpid_bulan = str(skp_raw["id"])
+    periode_penilaian_id = skp_raw["periodepenilaianid"]
 
     # ======================
     # LOAD EXCEL
     # ======================
-    df = pd.read_excel(EXCEL_FILE, sheet_name=SHEET_NAME)
+    df_pel = pd.read_excel(
+        EXCEL_PELAKSANAAN,
+        sheet_name="Pelaksanaan"
+    )
 
-    for _, row in df.iterrows():
-        if not row.get("iki_ids"):
+    df_rk = pd.read_excel(
+        EXCEL_PELAKSANAAN,
+        sheet_name="Rencana_Kinerja_Tahunan"
+    )
+
+    # ======================
+    # BUILD RK → IKI MAP
+    # ======================
+    rk_iki_map = {}
+
+    for _, row in df_rk.iterrows():
+        rkid = str(row.get("rkid", "")).strip()
+        iki_ids = str(row.get("iki_ids", "")).strip()
+
+        if not rkid.isdigit():
+            continue
+        if not iki_ids or iki_ids.lower() == "nan":
             continue
 
-        payload["data"].append({
-            "rk": str(row["rkid"]),
-            "iki": str(row["iki_ids"]).split(","),
+        rk_iki_map[rkid] = [
+            i.strip() for i in iki_ids.split(",") if i.strip().isdigit()
+        ]
+
+    if not rk_iki_map:
+        logger.error("❌ Mapping RK → IKI kosong")
+        return
+
+    # ======================
+    # AMBIL RKID DARI PELAKSANAAN (UNIK)
+    # ======================
+    used_rk = set()
+
+    for _, row in df_pel.iterrows():
+        rkid = str(row.get("rkid", "")).strip()
+
+        if not rkid or not rkid.isdigit():
+            continue
+
+        used_rk.add(rkid)
+
+    if not used_rk:
+        logger.error("❌ Tidak ada RKID valid di sheet Pelaksanaan")
+        return
+
+    # ======================
+    # BUILD PAYLOAD DATA
+    # ======================
+    data_payload = []
+
+    for rkid in sorted(used_rk):
+        iki = rk_iki_map.get(rkid)
+
+        if not iki:
+            logger.warning(f"⚠️ RK {rkid} tidak punya IKI → dilewati")
+            continue
+
+        data_payload.append({
+            "rk": rkid,
+            "iki": iki,
             "flagrk": 1
         })
 
-    if not payload["data"]:
-        logger.error("❌ Tidak ada RK valid untuk dipost")
+    if not data_payload:
+        logger.error("❌ Tidak ada RK + IKI valid untuk dipost")
         return
 
-    logger.info(f"📦 Total RK siap diproses: {len(payload['data'])}")
+    logger.info(f"📦 Total RK akan dipost: {len(data_payload)}")
+
+    payload = {
+        "id": skpid_bulan,
+        "periodepenilaianid": periode_penilaian_id,
+        "data": data_payload,
+        "flagmethod": 2
+    }
 
     # ======================
-    # DRY RUN EXIT
+    # DRY RUN
     # ======================
     if dry_run:
-        logger.info("🧪 DRY RUN SELESAI — tidak ada data dikirim")
+        logger.info("🧪 DRY RUN SELESAI — payload TIDAK dikirim")
         logger.debug(json.dumps(payload, indent=2))
         return
 
     # ======================
     # POST KE SERVER
     # ======================
-    logger.info("📤 Kirim RK ke server...")
-    resp = get_with_retry(
-        "https://kipapp.bps.go.id/api/v1/skp/bulanan",
-        method="POST",
+    logger.info("📤 Mengirim RK ke server...")
+    r = requests.post(
+        f"{BASE_URL}/skp/bulanan",
         headers={
             "X-Auth": x_auth,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Referer": "https://kipapp.bps.go.id/",
         },
-        json=payload
+        json=payload,
+        timeout=30
     )
 
+    if r.status_code != 200:
+        logger.error(f"❌ HTTP {r.status_code} | {r.text}")
+        r.raise_for_status()
+
+    resp = r.json()
+    if resp.get("status") is False:
+        raise RuntimeError(f"❌ Server menolak: {resp}")
+
     logger.info("✅ RK BULANAN BERHASIL DIAKTIFKAN")
-    logger.debug(json.dumps(resp, indent=2))
 
     # ======================
-    # LOCK RK (ONE TIME ONLY)
+    # ONE-TIME LOCK
     # ======================
     set_enable_post_rk_false()
-    logger.warning("🔒 enable_post_rk otomatis diset FALSE")
+    logger.warning("🔒 enable_post_rk diset FALSE (one-time)")
 
 
 if __name__ == "__main__":

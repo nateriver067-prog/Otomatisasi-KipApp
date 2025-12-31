@@ -17,8 +17,8 @@ def parse_pelaksanaan(data):
         rows.append({
             "tanggal": i.get("fullDate") or i.get("tanggal"),
             "waktu": i.get("fullTime") or i.get("time"),
-            "rkid": "",                    # diisi kemudian
             "rencana_kinerja": "",         # diisi kemudian
+            "rkid": "",                    # diisi kemudian
             "deskripsi": i.get("description"),
             "tahun": i.get("tahun"),
             "bulan": i.get("bulan")
@@ -29,8 +29,8 @@ def parse_pelaksanaan(data):
         columns=[
             "tanggal",
             "waktu",
-            "rkid",
             "rencana_kinerja",
+            "rkid",
             "deskripsi",
             "tahun",
             "bulan"
