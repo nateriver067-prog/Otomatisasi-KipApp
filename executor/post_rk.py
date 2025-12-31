@@ -1,17 +1,18 @@
 import json
 import pandas as pd
 
-from auth.auth import login_and_get_xauth
+from auth.kipapp import login_and_get_xauth
 from api.skp import get_dashboard_skp_bulan_ini
 from logger import logger
 from utils import get_with_retry
-from config import set_enable_post_rk_false, ENABLE_POST_RK
+from config import set_enable_post_rk_false, ENABLE_POST_RK,validate_env
 
 EXCEL_FILE = "output/KipApp_Pelaksanaan_dan_RK.xlsx"
 SHEET_NAME = "Rencana_Kinerja_Bulanan"
 
 
 def main(dry_run=False):
+    validate_env()
     logger.info("🚀 POST RK BULANAN")
 
     # ======================

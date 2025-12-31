@@ -3,7 +3,7 @@ import pandas as pd
 from tqdm import tqdm
 import requests
 
-from auth.auth import login_and_get_xauth
+from auth.kipapp import login_and_get_xauth
 from api.skp import (
     get_dashboard_skp_bulan_ini,
     get_rencana_kinerja_bulanan,
@@ -16,6 +16,7 @@ from config import (
     SHEET_PELAKSANAAN,
     EXCEL_LINKS,
     DELAY_POST,
+    validate_env
 )
 
 BASE_URL = "https://kipapp.bps.go.id/api/v1"
@@ -61,6 +62,7 @@ def post_pelaksanaan(
 # MAIN
 # ======================
 def main(dry_run=False):
+    validate_env()
     logger.info("🚀 POST PELAKSANAAN FULL RUN")
 
     if dry_run:
