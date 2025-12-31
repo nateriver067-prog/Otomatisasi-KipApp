@@ -1,132 +1,84 @@
 from auth import login_and_get_xauth
 from api import (
-    get_pegawai_dan_periode,
-    get_skp_list,
+    get_dashboard_skp_bulan_ini,
     get_rencana_kinerja_bulanan,
     get_pelaksanaan_bulanan
 )
 from parser import (
-    parse_rencana_kinerja,
+    parse_rencana_kinerja_bulanan,
     parse_pelaksanaan
 )
 from logger import logger
-from config import NIP_LAMA, ONLY_LAST_MONTH
+from config import NIP_LAMA
 from utils import UnauthorizedError
 import pandas as pd
 
 
 def main():
-    # ======================
-    # MENU (DISIAPKAN UNTUK FUTURE)
-    # ======================
-    print("\n=== MENU KIPAPP ===")
-    print("1. Ambil Rencana Kinerja Tahunan")
-    print("2. Ambil Pelaksanaan Bulanan")
-    print("3. Ambil RK Tahunan + Pelaksanaan (DEFAULT)")
-    print("0. Keluar")
-
-    pilihan = input("Pilih menu (0-3): ").strip()
-
-    if pilihan == "0":
-        print("👋 Keluar program")
-        return
-
-    if pilihan not in ("1", "2", "3"):
-        print("❌ Pilihan tidak valid")
-        return
-
-    # =====================================
-    # SEMUA PILIHAN → MODE GABUNG (3)
-    # =====================================
-    logger.info("🚀 Program dimulai (MODE GABUNG)")
+    logger.info("🚀 Program dimulai (MODE RK BULANAN FINAL)")
 
     # ======================
     # LOGIN
     # ======================
     x_auth = login_and_get_xauth()
-
+    
+# 2. ambil dashboard bulan aktif
     try:
-        meta = get_pegawai_dan_periode(x_auth)
+        dashboard = get_dashboard_skp_bulan_ini(x_auth)
+        skpid_bulan = dashboard["skp"]["raw"]["id"]
     except UnauthorizedError:
         logger.warning("🔄 Token expired, login ulang...")
         x_auth = login_and_get_xauth()
-        meta = get_pegawai_dan_periode(x_auth)
-
-    pegawai_id = meta["skp"]["raw"]["pegawaiid"]
-    periode_id = meta["skp"]["raw"]["periodeid"]
-
-    logger.info(f"👤 Pegawai ID : {pegawai_id}")
-    logger.info(f"📆 Periode ID : {periode_id}")
+        dashboard = get_dashboard_skp_bulan_ini(x_auth)
+        skpid_bulan = dashboard["skp"]["raw"]["id"]
 
     # ======================
-    # AMBIL SKP
+    # AMBIL SKP BULAN AKTIF
+    # ======================
+    skp_raw = dashboard["skp"]["raw"]
+    skpid_bulan = skp_raw["id"]
+    periode_id = skp_raw["periodeid"]
+    periode_penilaian_id = skp_raw["periodepenilaianid"]
+    tahun = skp_raw["tahun"]
+
+    logger.info(f"📌 SKP BULAN AKTIF ID : {skpid_bulan}")
+    logger.info(f"📆 Periode ID        : {periode_id}")
+    logger.info(f"🗓️  Tahun            : {tahun}")
+
+    # ======================
+    # Ambil RK BULANAN + IKI
     # ======================
     try:
-        skp_list = get_skp_list(x_auth, pegawai_id, periode_id)
-    except UnauthorizedError:
-        logger.warning("🔄 Token expired saat ambil SKP, login ulang...")
-        x_auth = login_and_get_xauth()
-        skp_list = get_skp_list(x_auth, pegawai_id, periode_id)
-
-    # ======================
-    # RK TAHUNAN
-    # ======================
-    skp_tahunan = [i for i in skp_list if i["periodepenilaianid"] is None]
-
-    if not skp_tahunan:
-        logger.critical("❌ SKP tahunan tidak ditemukan")
-        return
-
-    skp_id = skp_tahunan[0]["id"]
-    logger.info(f"📌 SKP Tahunan ID: {skp_id}")
-
-    try:
-        rk_data = get_rencana_kinerja_bulanan(x_auth, skp_id)
+        rk_data = get_rencana_kinerja_bulanan(x_auth, skpid_bulan)
     except UnauthorizedError:
         logger.warning("🔄 Token expired saat ambil RK, login ulang...")
         x_auth = login_and_get_xauth()
-        rk_data = get_rencana_kinerja_bulanan(x_auth, skp_id)
+        rk_data = get_rencana_kinerja_bulanan(x_auth, skpid_bulan)
 
-    df_rk = parse_rencana_kinerja(rk_data)
+    # 4. parse ke dataframe
+    df_rk = parse_rencana_kinerja_bulanan(rk_data)
 
     # ======================
     # PELAKSANAAN BULANAN
     # ======================
-    pelaksanaan_all = []
+    try:
+        pelaksanaan_data = get_pelaksanaan_bulanan(
+            x_auth,
+            periode_id,
+            periode_penilaian_id,
+            NIP_LAMA
+        )
+    except UnauthorizedError:
+        logger.warning("🔄 Token expired saat ambil pelaksanaan, login ulang...")
+        x_auth = login_and_get_xauth()
+        pelaksanaan_data = get_pelaksanaan_bulanan(
+            x_auth,
+            periode_id,
+            periode_penilaian_id,
+            NIP_LAMA
+        )
 
-    skp_bulanan = [i for i in skp_list if i["periodepenilaianid"] is not None]
-
-    if ONLY_LAST_MONTH and skp_bulanan:
-        logger.info("🎯 Mode aktif: hanya ambil pelaksanaan bulan terakhir")
-        skp_bulanan = [skp_bulanan[-1]]
-
-    if not skp_bulanan:
-        logger.warning("⚠️ Tidak ada SKP bulanan")
-    else:
-        for skp in skp_bulanan:
-            bulan = skp["keteranganperiodepenilaian"]
-            logger.info(f"📆 Ambil pelaksanaan bulan: {bulan}")
-
-            try:
-                data = get_pelaksanaan_bulanan(
-                    x_auth,
-                    periode_id,
-                    skp["periodepenilaianid"],
-                    NIP_LAMA
-                )
-            except UnauthorizedError:
-                logger.warning("🔄 Token expired, login ulang...")
-                x_auth = login_and_get_xauth()
-                data = get_pelaksanaan_bulanan(
-                    x_auth,
-                    periode_id,
-                    skp["periodepenilaianid"],
-                    NIP_LAMA
-                )
-
-            pelaksanaan_all.extend(data)
-
-    df_pelaksanaan = parse_pelaksanaan(pelaksanaan_all)
+    df_pelaksanaan = parse_pelaksanaan(pelaksanaan_data)
 
     # ======================
     # EXPORT EXCEL (2 SHEET)
@@ -134,36 +86,33 @@ def main():
     output_file = "output/KipApp_Pelaksanaan_dan_RK.xlsx"
 
     with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
-        # Sheet Pelaksanaan
         df_pelaksanaan.to_excel(
             writer,
             sheet_name="Pelaksanaan",
             index=False
         )
 
-        # Sheet RK
         df_rk.to_excel(
             writer,
-            sheet_name="Rencana_Kinerja_Tahunan",
+            sheet_name="Rencana_Kinerja_Bulanan",
             index=False
         )
 
-        workbook  = writer.book
         ws_pel = writer.sheets["Pelaksanaan"]
-        ws_rk  = writer.sheets["Rencana_Kinerja_Tahunan"]
+        ws_rk  = writer.sheets["Rencana_Kinerja_Bulanan"]
 
-        # ======================
-        # DROPDOWN RENCANA KINERJA
-        # ======================
         last_row = len(df_pelaksanaan) + 1
 
+        # ======================
+        # DROPDOWN RK
+        # ======================
         ws_pel.data_validation(
             f"C2:C{last_row}",
             {
                 "validate": "list",
-                "source": f"='Rencana_Kinerja_Tahunan'!$B$2:$B${len(df_rk)+1}",
+                "source": f"='Rencana_Kinerja_Bulanan'!$B$2:$B${len(df_rk)+1}",
                 "input_title": "Pilih RK",
-                "input_message": "Pilih rencana kinerja dari daftar"
+                "input_message": "Pilih rencana kinerja"
             }
         )
 
@@ -177,8 +126,8 @@ def main():
                     "=IFERROR("
                     "XLOOKUP("
                     f"C{row},"
-                    "'Rencana_Kinerja_Tahunan'!$B:$B,"
-                    "'Rencana_Kinerja_Tahunan'!$A:$A"
+                    "'Rencana_Kinerja_Bulanan'!$B:$B,"
+                    "'Rencana_Kinerja_Bulanan'!$A:$A"
                     "),"
                     "\"\""
                     ")"

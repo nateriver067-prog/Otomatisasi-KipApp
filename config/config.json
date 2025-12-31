@@ -1,0 +1,15 @@
+{
+  "username": "iqbal.m",
+  "password": "Tokyoghoul123",
+  "nip_lama": "340060186",
+
+  "tahun": 2025,
+  "bulan": 12,
+  "nama_bulan": "Desember",
+
+  "excel_pelaksanaan": "data/KipApp_Pelaksanaan_dan_RK.xlsx",
+  "sheet_pelaksanaan": "Pelaksanaan",
+  "excel_links": "data/KipApp_2025_12_links.xlsx",
+
+  "delay_post": 0.4
+}

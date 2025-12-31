@@ -27,16 +27,26 @@ def parse_pelaksanaan(data):
             "bulan"
         ]
     )
-def parse_rencana_kinerja(data):
+def parse_rencana_kinerja_bulanan(rk_list):
+    """
+    Output:
+    rkid | rencana_kinerja | iki_ids | iscopied | isused
+    """
     rows = []
 
-    for i in data:
+    for rk in rk_list:
+        iki_ids = []
+
+        for iki in rk.get("iki", []):
+            if iki.get("id"):
+                iki_ids.append(str(iki["id"]))
+
         rows.append({
-            "rkid": i.get("rkid"),
-            "rencana_kinerja": i.get("rencanakinerja"),
-            "rencana_kinerja_atasan": i.get("rencanakinerjaatasan"),
-            "tahun": i.get("tahun"),
-            "tim": i.get("namatim")
+            "rkid": str(rk.get("id")),
+            "rencana_kinerja": rk.get("rencanakinerja"),
+            "iki_ids": ",".join(iki_ids),   # penting untuk POST
+            "iscopied": rk.get("iscopied"),
+            "isused": rk.get("isused"),
         })
 
     return pd.DataFrame(rows)

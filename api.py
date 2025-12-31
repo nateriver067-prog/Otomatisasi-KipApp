@@ -4,10 +4,10 @@ from logger import logger
 
 
 # =========================
-# PEGAWAI & PERIODE
+# DASHBOARD (SUMBER KEBENARAN)
 # =========================
-def get_pegawai_dan_periode(x_auth):
-    logger.info("📥 Ambil pegawai & periode aktif")
+def get_dashboard_skp_bulan_ini(x_auth):
+    logger.info("📥 Ambil dashboard SKP bulan aktif")
 
     return get_with_retry(
         f"{BASE_URL}/dashboard/skpbulanini",
@@ -20,32 +20,16 @@ def get_pegawai_dan_periode(x_auth):
 
 
 # =========================
-# DAFTAR SKP
+# RENCANA KINERJA BULANAN (FINAL)
 # =========================
-def get_skp_list(x_auth, pegawai_id, periode_id):
-    logger.info("📥 Ambil daftar SKP")
-
-    return get_with_retry(
-        f"{BASE_URL}/skp",
-        headers={"X-Auth": x_auth},
-        params={
-            "pegawaiid": pegawai_id,
-            "periodeid": periode_id
-        }
-    )
-
-
-# =========================
-# RENCANA KINERJA (BULANAN / FINAL)
-# =========================
-def get_rencana_kinerja_bulanan(x_auth, skpid):
+def get_rencana_kinerja_bulanan(x_auth, skpid_bulan):
     """
-    RK yang BENAR untuk pelaksanaan:
-    - RK awal tahun
-    - RK tambahan
-    - Status iscopied & isused
+    RK yang dipakai untuk:
+    - pelaksanaan
+    - centang RK bulanan
+    - POST /skp/bulanan
     """
-    logger.info(f"📥 Ambil RK bulanan (copy) | skpid={skpid}")
+    logger.info(f"📥 Ambil RK bulanan + IKI | skpid={skpid_bulan}")
 
     data = get_with_retry(
         f"{BASE_URL}/skp/rk/copy/bulanan",
@@ -53,17 +37,16 @@ def get_rencana_kinerja_bulanan(x_auth, skpid):
             "X-Auth": x_auth,
             "User-Agent": USER_AGENT
         },
-        params={"skpid": skpid}
+        params={"skpid": skpid_bulan}
     )
 
     rk_list = data.get("rk", [])
-    logger.info(f"⬅️ RK diterima: {len(rk_list)} item")
+    logger.info(f"⬅️ RK bulanan diterima: {len(rk_list)} item")
 
     return rk_list
 
-
 # =========================
-# PELAKSANAAN / PRESENSI
+# PELAKSANAAN BULANAN
 # =========================
 def get_pelaksanaan_bulanan(x_auth, periode_id, periode_penilaian_id, niplama):
     logger.info(
