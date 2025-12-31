@@ -1,0 +1,12 @@
+{
+  "tahun": 2025,
+  "bulan": 12,
+  "nama_bulan": "Desember",
+
+  "excel_pelaksanaan": "output/KipApp_Pelaksanaan_dan_RK.xlsx",
+  "sheet_pelaksanaan": "Pelaksanaan",
+  "excel_links": "output/KipApp_2025_12_links.xlsx",
+
+  "delay_post": 0.4,
+  "enable_post_rk": false
+}

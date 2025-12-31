@@ -1,17 +1,42 @@
-# Python cache
+# =========================
+# Python
+# =========================
 __pycache__/
-*.pyc
-
-# Log
+*.py[cod]
+*.pyo
+*.pyd
 *.log
 
-# Input files
-input/
-*.xlsx
+# =========================
+# Virtual Environment
+# =========================
+.venv/
+venv/
+env/
 
-# Output files
+# =========================
+# Environment & Secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Output & Generated Files
+# =========================
 output/
 *.xlsx
+*.csv
 
-# Environment
-.env
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.swp
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
