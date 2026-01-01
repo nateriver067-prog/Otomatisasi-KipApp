@@ -1,166 +1,109 @@
-# KipApp Automation CLI
+# KipApp Automation CLI (v1)
 
-Tool otomatisasi internal untuk:
-- Scraping data KipApp (RK & Pelaksanaan)
-- Generate folder & link Drive BPS
-- Post RK Bulanan
-- Post Pelaksanaan Harian
+Automasi pengelolaan **SKP Bulanan KipApp (BPS)** berbasis Python + CLI.
 
-Dirancang aman, modular, dan bisa digunakan ulang oleh pegawai lain
-dengan cara clone repository.
+Project ini dirancang agar **pegawai cukup mengisi Excel**, lalu seluruh proses:
+- Scraping data RK & presensi
+- Generate folder & link Drive
+- Aktivasi RK Bulanan (one-time)
+- Post Pelaksanaan harian
+
+bisa dijalankan **otomatis, aman, dan terkontrol**.
 
 ---
 
-## 📁 Struktur Project
+## ✨ Fitur Utama
+
+- Scraping Rencana Kinerja Tahunan (RK + IKI) dan Presensi / Pelaksanaan harian
+- Generate folder & share link Drive (1 link per tanggal)
+- Aktivasi RK Bulanan (one-time, aman)
+- Post Pelaksanaan otomatis
+- Mode DRY RUN (simulasi tanpa POST)
+- CLI Tool (siap clone & jalan di PC pegawai lain)
+
+---
+
+## 📂 Struktur Project
 
 KipApp/
-│
-├── kipapp.py # CLI entry point
-│
-├── auth/ # Login & auth (SSO)
-├── api/ # Wrapper API KipApp & Drive
-├── parser/ # Parser → DataFrame
-├── executor/ # Logic utama (scrap / post / drive)
-│
-├── config.py # Loader .env & config.json
-├── utils.py # Retry, error handling
-├── logger.py # Logging terpusat
-│
-├── .env # RAHASIA (tidak di-commit)
-├── .env.example # Contoh env
-├── config.json # Parameter kerja
-│
-├── output/ # Hasil Excel & log
+├── kipapp.py              # CLI entry point
+├── auth/
+│   └── kipapp.py          # Login SSO KipApp (X-Auth)
+├── api/
+│   ├── skp.py             # API KipApp (SKP, RK, Pelaksanaan)
+│   └── drive.py           # API Drive BPS
+├── parser/
+│   ├── rk_parser.py       # Parser RK + IKI
+│   └── pelaksanaan_parser.py
+├── executor/
+│   ├── scrap.py           # Scraping RK & Pelaksanaan
+│   ├── post_rk.py         # Aktivasi RK Bulanan
+│   ├── generate_drive_links.py
+│   └── post_pelaksanaan.py
+├── config.py              # Loader env + config.json
+├── utils.py               # HTTP retry & helper
+├── logger.py              # Logging
+├── .env.example           # Contoh ENV (AMAN)
+├── config.json            # Konfigurasi kerja
+├── output/                # Output Excel & link
 └── README.md
-
-yaml
-Salin kode
 
 ---
 
-## ⚙️ Persiapan Awal
+## ⚙️ Konfigurasi
 
-### 1️⃣ Clone repository
-```bash
-git clone <repo-url>
-cd KipApp
-2️⃣ Buat virtual environment (disarankan)
-bash
-Salin kode
-python -m venv .venv
-source .venv/bin/activate   # Linux / Mac
-.venv\Scripts\activate      # Windows
-3️⃣ Install dependency
-bash
-Salin kode
-pip install -r requirements.txt
+### 1. File `.env` (jangan di-commit)
 
-🔐 Konfigurasi Environment
-.env
-Buat file .env berdasarkan .env.example:
-.env
-Salin kode
-KIPAPP_USERNAME="Username Anda"
-KIPAPP_PASSWORD="Password Anda"
-NIP_LAMA="NIP 9 Anda"
+Buat file `.env` berdasarkan `.env.example`:
 
-config.json
-Contoh:
+KIPAPP_USERNAME=nama.user  
+KIPAPP_PASSWORD=password  
+NIP_LAMA=xxxxxxxxx  
 
-json
-Salin kode
-{
-  "tahun": 2025,
-  "bulan": 12,
-  "nama_bulan": "Desember",
+### 2. File `config.json`
 
-  "excel_pelaksanaan": "output/KipApp_Pelaksanaan_dan_RK.xlsx",
-  "sheet_pelaksanaan": "Pelaksanaan",
-  "excel_links": "output/KipApp_2025_12_links.xlsx",
+Atur tahun, bulan, dan opsi kerja:
 
-  "delay_post": 0.4,
-  "enable_post_rk": true
-}
-🚀 Cara Pakai (CLI)
-1️⃣ Scraping data
-bash
-Salin kode
+- enable_post_rk = true → RK Bulanan boleh dipost
+- otomatis menjadi false setelah sukses (one-time safety)
+
+---
+
+## 🚀 Cara Pakai
+
+### 1. Scraping Data
 python kipapp.py scrap
-Menghasilkan:
 
-output/KipApp_Pelaksanaan_dan_RK.xlsx
-
-2️⃣ Post RK Bulanan
-bash
-Salin kode
+### 2. Aktivasi RK Bulanan (sekali per bulan)
+python kipapp.py post-rk --dry-run  
 python kipapp.py post-rk
-🔐 Hanya dijalankan 1x per bulan
-Setelah sukses → otomatis enable_post_rk = false
 
-Dry run:
-
-bash
-Salin kode
-python kipapp.py post-rk --dry-run
-3️⃣ Generate Drive Links
-bash
-Salin kode
+### 3. Generate Link Drive
+python kipapp.py gen-links --dry-run  
 python kipapp.py gen-links
-Struktur Drive:
 
-css
-Salin kode
-KipApp/YYYY/MM/YYYY-MM-DD
-Dry run:
-
-bash
-Salin kode
-python kipapp.py gen-links --dry-run
-4️⃣ Post Pelaksanaan
-bash
-Salin kode
+### 4. Post Pelaksanaan
+python kipapp.py post --dry-run  
 python kipapp.py post
-Dry run:
 
-bash
-Salin kode
-python kipapp.py post --dry-run
-5️⃣ Full Pipeline
-bash
-Salin kode
+### 5. Jalankan Semua
+python kipapp.py all --dry-run  
 python kipapp.py all
-Dry run aman:
 
-bash
-Salin kode
-python kipapp.py all --dry-run
-🧪 DRY RUN MODE
-Jika --dry-run aktif:
+---
 
-❌ Tidak ada POST ke KipApp
+## 🔐 Keamanan
 
-❌ Tidak membuat folder / link Drive
+- File `.env` tidak masuk Git
+- RK Bulanan tidak bisa double-post
+- Validasi RK, tanggal, dan link Drive sebelum POST
 
-✅ Validasi data & mapping tetap berjalan
+---
 
-Sangat disarankan sebelum REAL RUN.
+## 🏷️ Versi
 
-⚠️ Catatan Penting
-RKID & Rencana Kinerja
+v1.0 – Stabil & siap produksi
 
-RKID di Excel diisi otomatis (XLOOKUP)
+---
 
-Validasi rkid.isdigit() sudah aktif
-
-Duplicate Protection
-
-Pelaksanaan yang sudah ada tidak akan di-post ulang
-
-Drive link: 1 folder = 1 link (tidak duplikat)
-
-Keamanan
-
-Jangan commit .env
-
-Gunakan akun masing-masing
-
+Internal automation – BPS KipApp
