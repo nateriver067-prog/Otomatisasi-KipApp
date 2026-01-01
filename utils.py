@@ -1,4 +1,5 @@
 import time
+import random
 import requests
 from logger import logger
 
@@ -11,25 +12,37 @@ class SkipError(Exception):
     pass
 
 
-def get_with_retry(
+RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+
+
+def sleep_jitter(base=2.5, spread=4.0, label=""):
+    duration = random.uniform(base, base + spread)
+    if label:
+        logger.debug(f"[DELAY] {label} sleep {duration:.2f}s")
+    time.sleep(duration)
+
+
+def request_with_retry(
+    method,
     url,
     headers,
     params=None,
-    method="GET",
     json=None,
     data=None,
     retries=3,
-    delay=2,
     timeout=15,
+    delay_base=2.5,
+    delay_spread=4.0,
+    label="",
 ):
     """
-    HTTP wrapper dengan retry.
-    Support:
-    - GET / POST
-    - params
-    - json body
-    - data body
+    HTTP request wrapper dengan:
+    - retry selektif
+    - jitter delay
+    - aman untuk GET / POST
     """
+
+    last_exc = None
 
     for attempt in range(1, retries + 1):
         try:
@@ -44,18 +57,20 @@ def get_with_retry(
             )
 
             if r.status_code == 401:
-                logger.error(
-                    f"❌ 401 Unauthorized | URL={url} | params={params}"
-                )
+                logger.error(f"❌ 401 Unauthorized | {url}")
                 raise UnauthorizedError()
 
             if r.status_code >= 400:
-                logger.error(
-                    f"❌ HTTP {r.status_code} | URL={url} | response={r.text}"
-                )
-                r.raise_for_status()
+                if r.status_code in RETRYABLE_STATUS:
+                    raise requests.HTTPError(
+                        f"Retryable HTTP {r.status_code}", response=r
+                    )
+                else:
+                    logger.error(
+                        f"❌ HTTP {r.status_code} | {url} | {r.text}"
+                    )
+                    r.raise_for_status()
 
-            # default: JSON response
             try:
                 return r.json()
             except ValueError:
@@ -65,9 +80,18 @@ def get_with_retry(
             raise
 
         except Exception as e:
+            last_exc = e
             logger.warning(
-                f"⚠️ Attempt {attempt}/{retries} gagal: {e}"
+                f"⚠️ Attempt {attempt}/{retries} gagal [{label}]: {e}"
             )
+
             if attempt == retries:
-                raise
-            time.sleep(delay)
+                break
+
+            sleep_jitter(
+                base=delay_base,
+                spread=delay_spread,
+                label=f"{label} retry-{attempt}",
+            )
+
+    raise last_exc

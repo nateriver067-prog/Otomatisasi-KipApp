@@ -1,7 +1,5 @@
-import time
 import pandas as pd
 from tqdm import tqdm
-import requests
 
 from auth.kipapp import login_and_get_xauth
 from api.skp import (
@@ -14,10 +12,10 @@ from config import (
     EXCEL_PELAKSANAAN,
     SHEET_PELAKSANAAN,
     EXCEL_LINKS,
-    DELAY_POST,
     validate_env,
     NIP_LAMA,
 )
+from utils import request_with_retry,sleep_jitter   
 
 BASE_URL = "https://kipapp.bps.go.id/api/v1"
 
@@ -32,6 +30,7 @@ def post_pelaksanaan(
     tanggal,
     kegiatan,
     datadukung,
+    safe_cfg,
 ):
     payload = {
         "skpid": str(skpid_bulan),
@@ -45,23 +44,38 @@ def post_pelaksanaan(
         "iscapaianskp": 0,
     }
 
-    r = requests.post(
-        f"{BASE_URL}/kegiatan",
+    return request_with_retry(
+        method="POST",
+        url=f"{BASE_URL}/kegiatan",
         headers={
             "X-Auth": x_auth,
             "Content-Type": "application/json",
         },
         json=payload,
+        retries=safe_cfg["retries"],
+        delay_base=safe_cfg["delay_base"],
+        delay_spread=safe_cfg["delay_spread"],
+        label=f"{tanggal}",
     )
-
-    if r.status_code != 200:
-        raise RuntimeError(r.text)
-
 
 # ==================================================
 # MAIN
 # ==================================================
-def main(dry_run=False):
+def main(dry_run=False, safe_cfg=None):
+    if safe_cfg is None:
+        safe_cfg = {
+        "retries": 1,
+        "delay_base": 1.5,
+        "delay_spread": 2.0,
+        "circuit_breaker": None,
+    }
+    logger.info(
+    f"⚙️ Runtime config | retries={safe_cfg['retries']} "
+    f"| delay={safe_cfg['delay_base']}–"
+    f"{safe_cfg['delay_base'] + safe_cfg['delay_spread']}s "
+    f"| circuit_breaker={safe_cfg['circuit_breaker']}"
+    )   
+
     validate_env()
     logger.info("🚀 POST PELAKSANAAN BULANAN")
 
@@ -135,32 +149,11 @@ def main(dry_run=False):
     # ======================
     # LOOP UTAMA
     # ======================
+    error_streak = 0
+    MAX_ERROR_STREAK = safe_cfg["circuit_breaker"]
+
     for _, row in tqdm(df.iterrows(), total=len(df), desc="📤 Post Pelaksanaan"):
-        tanggal = str(row["tanggal"]).strip()
-        kegiatan = str(row["deskripsi"]).strip()
-        teks_rk = str(row["rencana_kinerja"]).strip().lower()
-
-        if not tanggal or not kegiatan or not teks_rk:
-            gagal += 1
-            continue
-
-        if teks_rk not in rk_map:
-            logger.error(f"❌ RK tidak ditemukan di RK bulanan: {teks_rk}")
-            gagal += 1
-            continue
-
-        if tanggal not in link_map:
-            logger.error(f"❌ Link Drive tidak ditemukan: {tanggal}")
-            gagal += 1
-            continue
-
-        rkid = rk_map[teks_rk]
-        key = (rkid, tanggal)
-
-        if key in existing_keys:
-            skip += 1
-            continue
-
+        ...
         if dry_run:
             logger.info(f"[DRY RUN] {tanggal} | {kegiatan}")
             sukses += 1
@@ -174,13 +167,27 @@ def main(dry_run=False):
                 tanggal,
                 kegiatan,
                 link_map[tanggal],
+                safe_cfg,
             )
             sukses += 1
-            time.sleep(DELAY_POST)
+            error_streak = 0
+
+            sleep_jitter(
+                safe_cfg["delay_base"],
+                safe_cfg["delay_spread"],
+                label="after pelaksanaan",
+            )
 
         except Exception as e:
-            logger.exception(f"❌ Gagal post {tanggal}: {e}")
             gagal += 1
+            error_streak += 1
+            logger.exception(f"❌ Gagal post {tanggal}: {e}")
+
+            if MAX_ERROR_STREAK and error_streak >= MAX_ERROR_STREAK:
+                logger.critical(
+                    "🛑 Terlalu banyak error berturut-turut. Proses dihentikan demi keamanan."
+                )
+                break
 
     # ======================
     # SUMMARY
