@@ -1,19 +1,18 @@
 # executor/post_rk.py
 import json
 import pandas as pd
-import requests
 
 from auth.kipapp import login_and_get_xauth
 from api.skp import get_dashboard_skp_bulan_ini
 from logger import logger
 from config import (
+    BASE_URL,
     EXCEL_PELAKSANAAN,
     ENABLE_POST_RK,
     set_enable_post_rk_false,
     validate_env,
 )
-
-BASE_URL = "https://kipapp.bps.go.id/api/v1"
+from utils import request_with_retry
 
 
 def main(dry_run: bool = False):
@@ -135,8 +134,9 @@ def main(dry_run: bool = False):
     # POST KE SERVER
     # ======================
     logger.info("📤 Mengirim RK ke server...")
-    r = requests.post(
-        f"{BASE_URL}/skp/bulanan",
+    resp = request_with_retry(
+        method="POST",
+        url=f"{BASE_URL}/skp/bulanan",
         headers={
             "X-Auth": x_auth,
             "Content-Type": "application/json",
@@ -144,15 +144,12 @@ def main(dry_run: bool = False):
             "Referer": "https://kipapp.bps.go.id/",
         },
         json=payload,
-        timeout=30
+        retries=3,
+        timeout=30,
+        label="post-rk",
     )
 
-    if r.status_code != 200:
-        logger.error(f"❌ HTTP {r.status_code} | {r.text}")
-        r.raise_for_status()
-
-    resp = r.json()
-    if resp.get("status") is False:
+    if isinstance(resp, dict) and resp.get("status") is False:
         raise RuntimeError(f"❌ Server menolak: {resp}")
 
     logger.info("✅ RK BULANAN BERHASIL DIAKTIFKAN")

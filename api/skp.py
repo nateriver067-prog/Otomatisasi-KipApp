@@ -1,5 +1,5 @@
 from config import BASE_URL, USER_AGENT, NIP_LAMA
-from utils import get_with_retry, UnauthorizedError
+from utils import request_with_retry, UnauthorizedError
 from logger import logger
 
 
@@ -15,8 +15,9 @@ def get_dashboard_skp_bulan_ini(x_auth):
     """
     logger.info("📥 Ambil dashboard SKP bulan aktif")
 
-    return get_with_retry(
-        f"{BASE_URL}/dashboard/skpbulanini",
+    return request_with_retry(
+        method="GET",
+        url=f"{BASE_URL}/dashboard/skpbulanini",
         headers={
             "X-Auth": x_auth,
             "User-Agent": USER_AGENT
@@ -39,8 +40,9 @@ def get_rencana_kinerja_tahunan(x_auth, skpid_bulan):
     """
     logger.info(f"📥 Ambil RK Tahunan + IKI | skpid={skpid_bulan}")
 
-    data = get_with_retry(
-        f"{BASE_URL}/skp/rk/copy/bulanan",
+    data = request_with_retry(
+        method="GET",
+        url=f"{BASE_URL}/skp/rk/copy/bulanan",
         headers={
             "X-Auth": x_auth,
             "User-Agent": USER_AGENT
@@ -74,8 +76,9 @@ def get_pelaksanaan_bulanan(x_auth, periode_id, periode_penilaian_id, niplama=No
         f"niplama={niplama}"
     )
 
-    data = get_with_retry(
-        f"{BASE_URL}/kegiatan/presensi",
+    data = request_with_retry(
+        method="GET",
+        url=f"{BASE_URL}/kegiatan/presensi",
         headers={
             "X-Auth": x_auth,
             "User-Agent": USER_AGENT
@@ -93,8 +96,9 @@ def get_pelaksanaan_bulanan(x_auth, periode_id, periode_penilaian_id, niplama=No
 def get_rk_dropdown_bulanan(x_auth, skpid_bulan):
     logger.info(f"📥 Ambil RK dropdown bulanan | skpid={skpid_bulan}")
 
-    data = get_with_retry(
-        f"{BASE_URL}/skp/rk",
+    data = request_with_retry(
+        method="GET",
+        url=f"{BASE_URL}/skp/rk",
         headers={
             "X-Auth": x_auth,
             "User-Agent": USER_AGENT
@@ -121,9 +125,9 @@ def post_kegiatan(x_auth, payload):
         f"tanggal={payload.get('tanggal')}"
     )
 
-    return get_with_retry(
-        f"{BASE_URL}/kegiatan",
+    return request_with_retry(
         method="POST",
+        url=f"{BASE_URL}/kegiatan",
         headers={
             "X-Auth": x_auth,
             "User-Agent": USER_AGENT,

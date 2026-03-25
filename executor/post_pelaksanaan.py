@@ -9,15 +9,14 @@ from api.skp import (
 )
 from logger import logger
 from config import (
+    BASE_URL,
     EXCEL_PELAKSANAAN,
     SHEET_PELAKSANAAN,
     EXCEL_LINKS,
     validate_env,
     NIP_LAMA,
 )
-from utils import request_with_retry,sleep_jitter   
-
-BASE_URL = "https://kipapp.bps.go.id/api/v1"
+from utils import request_with_retry, sleep_jitter
 
 
 # ==================================================
@@ -153,7 +152,30 @@ def main(dry_run=False, safe_cfg=None):
     MAX_ERROR_STREAK = safe_cfg["circuit_breaker"]
 
     for _, row in tqdm(df.iterrows(), total=len(df), desc="📤 Post Pelaksanaan"):
-        ...
+        tanggal = str(row.get("tanggal", "")).strip()
+        rencana_kinerja = str(row.get("rencana_kinerja", "")).strip()
+        kegiatan = str(row.get("deskripsi", "")).strip()
+
+        if not tanggal or not rencana_kinerja:
+            skip += 1
+            continue
+
+        rkid = rk_map.get(rencana_kinerja.lower())
+        if not rkid:
+            logger.warning(f"⚠️ RK tidak ditemukan: '{rencana_kinerja}' | {tanggal}")
+            skip += 1
+            continue
+
+        if (rkid, tanggal) in existing_keys:
+            logger.debug(f"⏭️ Skip (sudah ada): {tanggal} | {rkid}")
+            skip += 1
+            continue
+
+        if tanggal not in link_map:
+            logger.warning(f"⚠️ Link Drive tidak ada untuk tanggal {tanggal}")
+            skip += 1
+            continue
+
         if dry_run:
             logger.info(f"[DRY RUN] {tanggal} | {kegiatan}")
             sukses += 1
