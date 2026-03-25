@@ -1,3 +1,4 @@
+# === scraping & automation ===
 selenium
 webdriver-manager
 requests
@@ -5,3 +6,11 @@ pandas
 tqdm
 python-dotenv
 xlsxwriter
+
+# === ML / NLP (fine-tuning) ===
+torch
+sentence-transformers
+transformers
+datasets
+accelerate>=0.26.0
+scikit-learn
